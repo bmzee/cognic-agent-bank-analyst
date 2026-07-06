@@ -1,0 +1,82 @@
+{
+  "capabilities": {
+    "extendedAgentCard": false,
+    "pushNotifications": false,
+    "streaming": false
+  },
+  "defaultInputModes": [
+    "text/plain"
+  ],
+  "defaultOutputModes": [
+    "text/plain"
+  ],
+  "description": "Bank data analyst answering customer, deposit, finance and card questions strictly from governed data; selects the matching granted skill, authors read-only SQL over its governed views, and reports only figures returned by run_readonly_query.",
+  "name": "Cognic Agent Bank Analyst",
+  "provider": {
+    "organization": "Cognic",
+    "url": "https://github.com/bmzee/cognic-agent-bank-analyst"
+  },
+  "securityRequirements": [
+    {
+      "schemes": {
+        "bearer": {
+          "list": [
+            "a2a:invoke"
+          ]
+        }
+      }
+    }
+  ],
+  "securitySchemes": {
+    "bearer": {
+      "httpAuthSecurityScheme": {
+        "bearerFormat": "cognic-pinned-token",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "signatures": [
+    {
+      "protected": "(jws-protected-header-placeholder)",
+      "signature": "(jws-signature-placeholder)"
+    }
+  ],
+  "skills": [
+    {
+      "description": "Customer, account and deposit questions over the RETAIL_ANALYTICS governed views.",
+      "id": "customer-data",
+      "name": "customer-data",
+      "tags": [
+        "governed-data",
+        "read-only"
+      ]
+    },
+    {
+      "description": "Finance and general-ledger questions over the FIN governed views.",
+      "id": "financial-data",
+      "name": "financial-data",
+      "tags": [
+        "governed-data",
+        "read-only"
+      ]
+    },
+    {
+      "description": "Card portfolio and card-spend questions over the CARDS governed views.",
+      "id": "cards-data",
+      "name": "cards-data",
+      "tags": [
+        "governed-data",
+        "read-only"
+      ]
+    }
+  ],
+  "supportedInterfaces": [
+    {
+      "protocolBinding": "JSONRPC",
+      "protocolVersion": "1.0",
+      "tenant": "bank_a",
+      "url": "https://agentos.example/a2a"
+    }
+  ],
+  "version": "0.1.0"
+}

@@ -1,0 +1,96 @@
+[project]
+name = "cognic-agent-bank-analyst"
+version = "0.1.0"
+description = "Declarative governed agent: bank data analyst persona answering only from governed data via the kernel-owned agent loop (Cognic AgentOS agent pack, M8)."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "Cognic", email = "zaighum@msn.com" },
+]
+
+# Runtime-empty BY DESIGN: a declarative agent pack (M8, ADR-027) ships NO
+# agent code — the AGENT.md persona + the signed manifest declare WHO the
+# agent is and WHAT it requests; the AgentOS kernel owns the reasoning
+# loop and every dispatch decision. The wheel exists solely to carry
+# AGENT.md + cognic-pack-manifest.toml as package data through the
+# signed-pack trust pipeline (plus the inert cognic.agents marker the
+# plugin registry discovers, which imports nothing but typing); it must
+# install with plain `pip --no-deps`. Pinned by a pack test.
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "ruff>=0.9",
+    "mypy>=1.14",
+    # AgentOS kernel — author/CI-time only (the protocol.agent_manifest +
+    # cli.validators import surface for tests + the validate/sign/verify
+    # CLI). Pinned to the IMMUTABLE pushed M8 anchor (the
+    # feat/m8-governed-agent-loop head that ships the A8 [agent]-block
+    # validator + the agent-pack hosting arms this pack authors against);
+    # mirrors the sibling cognic-skill-cards-data dev-extra shape. Dev
+    # extra ONLY — the wheel's runtime dependencies stay empty by design.
+    "cognic-agentos @ git+https://github.com/bmzee/cognic-agentos@e379dc2",
+]
+
+# The ONLY entry point: the inert cognic.agents marker. The plugin
+# registry discovers agent packs by this group
+# (protocol/plugin_registry.py); admission + hosting NEVER import it
+# (ADR-002 gate-1 deferred-load) — the module body performs no I/O and
+# mints a bare object() sentinel. Pinned inert by the pack's AST-scan +
+# import-probe tests; no cognic.tools / cognic.skills / cognic.hooks
+# groups may ever appear here.
+[project.entry-points."cognic.agents"]
+bank-analyst = "cognic_agent_bank_analyst.marker:AGENT_MARKER"
+
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+# Required for the dev extra's PEP 508 direct reference (the git+https
+# kernel pin above) — hatchling refuses direct references by default.
+# Runtime dependencies stay empty, so the WHEEL remains index-clean;
+# mirrors the sibling cognic-skill-cards-data configuration.
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cognic_agent_bank_analyst"]
+
+[tool.hatch.build.targets.wheel.force-include]
+# Ship the AGENT.md persona + the pack manifest as package data so the
+# AgentOS hosting layer can read + validate them from the INSTALLED wheel
+# WITHOUT importing pack code (ADR-027 + the ADR-002 gate-1 deferred-load
+# discipline): protocol.agent_manifest.extract_agent_md reads
+# <pkg>/AGENT.md and the agent host (harness/agent_host.py) reads
+# <pkg>/cognic-pack-manifest.toml for the [agent] block + risk tier. The
+# AgentCard JWS is NOT wheel-read (validate/verify resolve it against the
+# pack/bundle root), so agent_cards/ deliberately stays out of the wheel.
+"AGENT.md" = "cognic_agent_bank_analyst/AGENT.md"
+"cognic-pack-manifest.toml" = "cognic_agent_bank_analyst/cognic-pack-manifest.toml"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+# Mirrors the sibling packs' conservative baseline (pyflakes + safe
+# pycodestyle subset). Widen deliberately in a follow-up.
+select = ["E4", "E7", "E9", "F"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_unused_configs = true
+warn_redundant_casts = true
+
+# The kernel distribution ships no py.typed marker (typed in-repo, untyped
+# to consumers — kernel packaging follow-up). Until it does, kernel imports
+# are analyzed as Any.
+[[tool.mypy.overrides]]
+module = "cognic_agentos.*"
+ignore_missing_imports = true

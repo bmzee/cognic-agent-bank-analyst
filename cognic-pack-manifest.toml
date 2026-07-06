@@ -1,0 +1,80 @@
+# Cognic AgentOS pack manifest — Wave-1 schema.
+#
+# Run `agentos validate .` to check this manifest against the kernel's
+# build-time trust gate (seed placeholder attestations + a placeholder
+# AgentCard JWS first — see README).
+
+[pack]
+pack_id = "cognic-agent-bank-analyst"
+schema_version = 1
+kind = "agent"
+
+[identity]
+# AGNTCY/OASF identity matrix. Agent packs declare the universally
+# mandatory Wave-1 fields PLUS the two agent-pack-only card fields
+# (cli/validators/identity.py): agent_card_url + agent_card_jws_path.
+# The JWS path must resolve to a file inside the pack at validate time;
+# `agentos sign --bundle .` signs agent_cards/agent-card.json and writes
+# the real detached JWS to this path at release.
+agent_id = "did:web:github.com:bmzee:cognic-agent-bank-analyst"
+display_name = "Cognic Agent Bank Analyst"
+provider_organization = "Cognic"
+provider_url = "https://github.com/bmzee/cognic-agent-bank-analyst"
+agent_card_url = "https://github.com/bmzee/cognic-agent-bank-analyst/releases/download/v0.1.0/agent-card.jws"
+agent_card_jws_path = "agent_cards/agent-card.jws"
+
+[data_governance]
+# ADR-017 contract, declared from the AGENT's data flow: the persona
+# reads customer/account/deposit, finance/general-ledger and card data
+# through cognic-tool-oracle-schema/run_readonly_query under the ASKING
+# USER's data-scope entitlement (kernel-signed query context, ADR-027) —
+# hence customer_pii + internal at tier customer_data_read. The kernel
+# loop persists a bounded task-tier memory digest of each run (ADR-019;
+# long-term writes are structurally off), declared honestly as task_only
+# with a 1-day ceiling. No egress of its own: every capability call
+# rides the kernel dispatch chokepoint.
+data_classes = [
+    "customer_pii",
+    "internal",
+]
+purpose = "customer_support"
+retention_policy = "task_only"
+retention_max_window = 1
+egress_allow_list = []
+
+[risk_tier]
+# ADR-014 risk tier. The agent READS customer data and never writes:
+# customer_data_read is the kernel minimum for the declared customer_pii
+# class (DATA_CLASS_TO_MIN_RISK_TIER) and the honest ceiling for a
+# read-only analyst.
+tier = "customer_data_read"
+
+# M8 (ADR-027) declarative agent block. The pack declares WHO the agent
+# is (the AGENT.md persona) and WHAT it requests — never how it runs:
+# the AgentOS kernel owns the reasoning loop and every dispatch
+# decision. The requested sets are CEILINGS, not grants: the tenant's
+# kernel-side agent_assignments rows grant capabilities, and the
+# ingestion invariant refuses any grant the persona never requested.
+# atm-recon is DELIBERATELY not requested — this agent can never be
+# granted the atm_recon scope (pinned by a pack test).
+[agent]
+persona_path = "AGENT.md"
+requested_skills = [
+    "customer-data",
+    "financial-data",
+    "cards-data",
+]
+requested_tools = [
+    "cognic-tool-oracle-schema/run_readonly_query",
+]
+max_steps = 6
+
+[supply_chain]
+# ADR-016 attestation paths. Each path is checked at validate time;
+# missing files trip supply_chain_attestation_path_unresolvable.
+# Run `agentos sign --bundle .` to populate attestations/ (operator key
+# custody — release work, never local).
+attestation_paths = [
+    "attestations/cosign.sig",
+    "attestations/sbom.cdx.json",
+]
