@@ -20,19 +20,17 @@ agent_id = "did:web:github.com:bmzee:cognic-agent-bank-analyst"
 display_name = "Cognic Agent Bank Analyst"
 provider_organization = "Cognic"
 provider_url = "https://github.com/bmzee/cognic-agent-bank-analyst"
-agent_card_url = "https://github.com/bmzee/cognic-agent-bank-analyst/releases/download/v0.1.0/agent-card.jws"
+agent_card_url = "https://github.com/bmzee/cognic-agent-bank-analyst/releases/download/v0.2.0/agent-card.jws"
 agent_card_jws_path = "agent_cards/agent-card.jws"
 
 [data_governance]
-# ADR-017 contract, declared from the AGENT's data flow: the persona
-# reads customer/account/deposit, finance/general-ledger and card data
-# through cognic-tool-oracle-schema/run_readonly_query under the ASKING
-# USER's data-scope entitlement (kernel-signed query context, ADR-027) —
-# hence customer_pii + internal at tier customer_data_read. The kernel
-# loop persists a bounded task-tier memory digest of each run (ADR-019;
-# long-term writes are structurally off), declared honestly as task_only
-# with a 1-day ceiling. No egress of its own: every capability call
-# rides the kernel dispatch chokepoint.
+# ADR-017 contract, declared from the AGENT's data flow: six governed data
+# domains ride run_readonly_query under the ASKING USER's scope entitlement;
+# the one leave action is separately action-entitled and approval-gated.
+# Hence customer_pii + internal at tier customer_data_read. The kernel loop
+# persists only a bounded task-tier memory digest (ADR-019); long-term writes
+# are structurally off. No egress of its own: every capability call rides the
+# kernel dispatch chokepoint.
 data_classes = [
     "customer_pii",
     "internal",
@@ -43,37 +41,35 @@ retention_max_window = 1
 egress_allow_list = []
 
 [risk_tier]
-# ADR-014 risk tier. The agent READS customer data and never writes:
-# customer_data_read is the kernel minimum for the declared customer_pii
-# class (DATA_CLASS_TO_MIN_RISK_TIER) and the honest ceiling for a
-# read-only analyst.
+# ADR-014 risk tier. Data access reaches customer data, so
+# customer_data_read is the kernel minimum for customer_pii. The separately
+# classified high-risk action is controlled by its tool pack's tier,
+# action entitlement, maker-checker approval, and action-context token.
 tier = "customer_data_read"
 
-# M8 (ADR-027) declarative agent block. The pack declares WHO the agent
-# is (the AGENT.md persona) and WHAT it requests — never how it runs:
-# the AgentOS kernel owns the reasoning loop and every dispatch
-# decision. The requested sets are CEILINGS, not grants: the tenant's
-# kernel-side agent_assignments rows grant capabilities, and the
-# ingestion invariant refuses any grant the persona never requested.
-# atm-recon is DELIBERATELY not requested — this agent can never be
-# granted the atm_recon scope (pinned by a pack test).
+# M8 (ADR-027) declarative agent block. The pack declares WHO the agent is
+# and WHAT it requests, never how it runs. These sets are CEILINGS, not
+# grants: tenant agent_assignments narrow them, and ingestion refuses a
+# grant the persona never requested. atm-recon remains deliberately absent.
 [agent]
 persona_path = "AGENT.md"
 requested_skills = [
     "customer-data",
     "financial-data",
     "cards-data",
+    "hr-data",
+    "orders-data",
+    "warehouse-data",
 ]
 requested_tools = [
     "cognic-tool-oracle-schema/run_readonly_query",
+    "cognic-tool-hr-leave/apply_leave",
 ]
 max_steps = 6
 
 [supply_chain]
-# ADR-016 attestation paths. Each path is checked at validate time;
-# missing files trip supply_chain_attestation_path_unresolvable.
-# Run `agentos sign --bundle .` to populate attestations/ (operator key
-# custody — release work, never local).
+# ADR-016 attestation paths. Each path is checked at validate time; release
+# custody populates them through `agentos sign --bundle .`.
 attestation_paths = [
     "attestations/cosign.sig",
     "attestations/sbom.cdx.json",

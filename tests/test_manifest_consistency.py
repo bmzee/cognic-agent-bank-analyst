@@ -20,8 +20,18 @@ from typing import Any
 _ROOT = pathlib.Path(__file__).resolve().parents[1]
 _DISTRIBUTION = "cognic-agent-bank-analyst"
 _PACKAGE = "cognic_agent_bank_analyst"
-_REQUESTED_SKILLS = ["customer-data", "financial-data", "cards-data"]
-_REQUESTED_TOOL = "cognic-tool-oracle-schema/run_readonly_query"
+_REQUESTED_SKILLS = [
+    "customer-data",
+    "financial-data",
+    "cards-data",
+    "hr-data",
+    "orders-data",
+    "warehouse-data",
+]
+_REQUESTED_TOOLS = [
+    "cognic-tool-oracle-schema/run_readonly_query",
+    "cognic-tool-hr-leave/apply_leave",
+]
 _NEVER_GRANTED_SKILL = "atm-recon"
 
 
@@ -36,6 +46,7 @@ def _pyproject() -> dict[str, Any]:
 def test_pack_kind_is_agent() -> None:
     assert _manifest()["pack"]["kind"] == "agent"
     assert _manifest()["pack"]["pack_id"] == _DISTRIBUTION
+    assert _pyproject()["project"]["version"] == "0.2.0"
 
 
 def test_persona_path_is_agent_md() -> None:
@@ -47,8 +58,8 @@ def test_persona_path_is_agent_md() -> None:
     assert (_ROOT / "AGENT.md").is_file()
 
 
-def test_agent_block_requests_exactly_the_three_data_skills() -> None:
-    """The requested_skills ceiling is EXACT (order included): the three
+def test_agent_block_requests_exactly_the_six_data_skills() -> None:
+    """The requested_skills ceiling is EXACT (order included): the six
     governed data domains the persona teaches. The kernel ingestion
     invariant (core/agent/assignments.py) refuses any tenant grant outside
     this set."""
@@ -65,11 +76,11 @@ def test_atm_recon_is_never_requested() -> None:
     assert all(_NEVER_GRANTED_SKILL not in tool for tool in agent_block["requested_tools"])
 
 
-def test_requested_tools_is_exactly_the_governed_query_tool() -> None:
-    """One requested tool: the governed read-only SQL leg. The
+def test_requested_tools_are_exactly_query_plus_own_leave() -> None:
+    """The governed read-only SQL leg plus the approval-gated leave action. The
     <server_id>/<tool_name> identity follows the kernel's
     first-'/'-partition rule (cli/validators/agents.py)."""
-    assert _manifest()["agent"]["requested_tools"] == [_REQUESTED_TOOL]
+    assert _manifest()["agent"]["requested_tools"] == _REQUESTED_TOOLS
 
 
 def test_max_steps_is_six() -> None:
@@ -123,7 +134,7 @@ def test_identity_block_carries_the_agent_mandatory_fields() -> None:
     assert identity["provider_organization"] == "Cognic"
     assert identity["provider_url"] == f"https://github.com/bmzee/{_DISTRIBUTION}"
     assert identity["agent_card_url"] == (
-        f"https://github.com/bmzee/{_DISTRIBUTION}/releases/download/v0.1.0/agent-card.jws"
+        f"https://github.com/bmzee/{_DISTRIBUTION}/releases/download/v0.2.0/agent-card.jws"
     )
     assert identity["agent_card_jws_path"] == "agent_cards/agent-card.jws"
 
@@ -156,6 +167,7 @@ def test_supply_chain_is_sign_ready() -> None:
         "attestations/cosign.sig",
         "attestations/sbom.cdx.json",
     ]
+    assert "blob_path" not in _manifest()["supply_chain"]
 
 
 def test_agent_card_signing_payload_is_tracked_source() -> None:
@@ -164,7 +176,7 @@ def test_agent_card_signing_payload_is_tracked_source() -> None:
     payload is SOURCE and must ship in the repo with the pack identity."""
     card = json.loads((_ROOT / "agent_cards" / "agent-card.json").read_text(encoding="utf-8"))
     assert card["name"] == "Cognic Agent Bank Analyst"
-    assert card["version"] == "0.1.0"
+    assert card["version"] == "0.2.0"
     assert card["provider"]["organization"] == "Cognic"
     assert [skill["id"] for skill in card["skills"]] == _REQUESTED_SKILLS
 

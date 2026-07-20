@@ -2,9 +2,10 @@
 
 A **declarative governed agent** for Cognic AgentOS (M8, ADR-027). The
 pack is a persona, not a program: `AGENT.md` declares WHO the agent is (a
-bank data analyst that answers only from governed data) and the signed
-manifest declares WHAT it requests (three instruction skills + the
-governed query tool + a step ceiling). **The AgentOS kernel owns the
+bank data analyst that answers only from governed data and can propose the
+asking user's own leave request) and the signed manifest declares WHAT it
+requests (six instruction skills + the governed query tool + the approval-
+gated leave tool + a step ceiling). **The AgentOS kernel owns the
 reasoning loop and every dispatch decision** — there is no agent code
 here beyond an inert `cognic.agents` marker the plugin registry
 discovers.
@@ -12,8 +13,8 @@ discovers.
 | aspect | value |
 |---|---|
 | `AGENT.md` name (the runtime agent id) | `bank-analyst` |
-| requested skills (ceiling, not grant) | `customer-data`, `financial-data`, `cards-data` |
-| requested tool | `cognic-tool-oracle-schema/run_readonly_query` |
+| requested skills (ceiling, not grant) | `customer-data`, `financial-data`, `cards-data`, `hr-data`, `orders-data`, `warehouse-data` |
+| requested tools | `cognic-tool-oracle-schema/run_readonly_query`, `cognic-tool-hr-leave/apply_leave` |
 | `max_steps` | `6` |
 | risk tier | `customer_data_read` |
 | data classes | `customer_pii`, `internal` |
@@ -36,6 +37,9 @@ An M8 agent pack hosts identity + intent, never execution:
   gate, per-user data-scope entitlement gate, Rego policy gate, then the
   kernel-signed query-context stamp on `run_readonly_query` — the asking
   user's entitlement, not the agent's say-so, decides what data returns.
+  `apply_leave` is independently action-entitled and approval-gated; the
+  agent can propose only the asking user's own request and cannot claim
+  completion until the kernel's post-approval system turn records execution.
 - The inert marker (`cognic_agent_bank_analyst.marker:AGENT_MARKER`) is a
   bare `object()` sentinel. Registry discovery needs a resolvable entry
   point; admission and hosting read the manifest + `AGENT.md` as package

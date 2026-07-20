@@ -1,7 +1,7 @@
 [project]
 name = "cognic-agent-bank-analyst"
-version = "0.1.0"
-description = "Declarative governed agent: bank data analyst persona answering only from governed data via the kernel-owned agent loop (Cognic AgentOS agent pack, M8)."
+version = "0.2.0"
+description = "Declarative governed bank analyst for six data domains plus one approval-gated self-leave action through the kernel-owned agent loop."
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 license = { text = "Apache-2.0" }

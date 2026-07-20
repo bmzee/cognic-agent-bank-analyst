@@ -10,7 +10,7 @@
   "defaultOutputModes": [
     "text/plain"
   ],
-  "description": "Bank data analyst answering customer, deposit, finance and card questions strictly from governed data; selects the matching granted skill, authors read-only SQL over its governed views, and reports only figures returned by run_readonly_query.",
+  "description": "Bank data analyst answering customer, finance, cards, HR, orders and warehouse questions from governed data, and submitting only the asking user's own leave request through the approval-gated write tool.",
   "name": "Cognic Agent Bank Analyst",
   "provider": {
     "organization": "Cognic",
@@ -68,6 +68,33 @@
         "governed-data",
         "read-only"
       ]
+    },
+    {
+      "description": "Employee, department and job-history questions over the HR governed views.",
+      "id": "hr-data",
+      "name": "hr-data",
+      "tags": [
+        "governed-data",
+        "read-only"
+      ]
+    },
+    {
+      "description": "Customer-order and product-review questions over the CO governed views.",
+      "id": "orders-data",
+      "name": "orders-data",
+      "tags": [
+        "governed-data",
+        "read-only"
+      ]
+    },
+    {
+      "description": "Warehouse sales, channel and promotion questions over the SH governed views.",
+      "id": "warehouse-data",
+      "name": "warehouse-data",
+      "tags": [
+        "governed-data",
+        "read-only"
+      ]
     }
   ],
   "supportedInterfaces": [
@@ -78,5 +105,5 @@
       "url": "https://agentos.example/a2a"
     }
   ],
-  "version": "0.1.0"
+  "version": "0.2.0"
 }

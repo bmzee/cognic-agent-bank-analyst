@@ -21,10 +21,9 @@ from cognic_agentos.protocol.agent_manifest import parse_skill_md, validate_skil
 _ROOT = pathlib.Path(__file__).resolve().parents[1]
 _AGENT_ID = "bank-analyst"
 _DECLARED_SENTENCE = (
-    "Bank data analyst answering customer, deposit, finance and card questions "
-    "strictly from governed data; selects the matching granted skill, authors "
-    "read-only SQL over its governed views, and reports only figures returned "
-    "by run_readonly_query."
+    "Bank data analyst answering customer, finance, cards, HR, orders and warehouse "
+    "questions from governed data, and submitting only the asking user's own leave "
+    "request through the approval-gated write tool."
 )
 
 
@@ -80,12 +79,12 @@ def test_persona_refuses_plainly_and_never_fabricates() -> None:
 
 
 def test_persona_covers_each_requested_skill_domain() -> None:
-    """The persona names the three granted DOMAINS (deliberately not the
+    """The persona names the six requested DOMAINS (deliberately not the
     skill ids — grants are runtime; the loop injects granted skill names +
     descriptions into the system prompt)."""
     _frontmatter, body = _frontmatter_and_body()
     lowered = body.lower()
-    for domain_word in ("deposit", "general-ledger", "card"):
+    for domain_word in ("deposit", "general-ledger", "card", "employee", "order", "warehouse"):
         assert domain_word in lowered, f"persona must cover the {domain_word} domain"
 
 
@@ -95,6 +94,15 @@ def test_persona_never_names_the_ungrated_atm_domain() -> None:
     assert "atm" not in _agent_md_text().lower()
 
 
-def test_persona_stays_read_only() -> None:
+def test_persona_keeps_data_queries_read_only() -> None:
     _frontmatter, body = _frontmatter_and_body()
     assert "no DML, DDL, PL/SQL" in body
+
+
+def test_persona_limits_the_write_path_to_own_leave_with_kernel_approval() -> None:
+    _frontmatter, body = _frontmatter_and_body()
+    assert "asking user's own leave request" in body
+    assert "`apply_leave`" in body
+    assert "pending approval" in body
+    assert "system completion turn" in body
+    assert "Never supply an employee identifier" in body
