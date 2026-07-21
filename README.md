@@ -98,3 +98,12 @@ JWS are build outputs produced by `agentos sign --bundle .`
 GitHub Release — never committed. The release asset set is derived from
 the actual sign/verify output at release time. The public trust root
 (`cosign.pub`, per-pack key) is committed at first signing.
+
+## Trust-root rotation (2026-07-21)
+
+The v0.1.0-era private keys were retired unrecoverable; the maintainer ruled a
+trust-root rotation (human-only decision). The committed `cosign.pub` and
+`agent-card.pub` are the NEW roots: `v0.2.0`+ releases sign and verify against
+them. `v0.1.0` remains historically verifiable against the OLD roots preserved
+in its own release assets. Deployments bind releases through digest pins of the
+released assets, so no consumer-side trust edit is required beyond the pins.
