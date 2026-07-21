@@ -24,14 +24,13 @@ dev = [
     "pytest>=8",
     "ruff>=0.9",
     "mypy>=1.14",
+    "pip-licenses>=5",
     # AgentOS kernel — author/CI-time only (the protocol.agent_manifest +
     # cli.validators import surface for tests + the validate/sign/verify
-    # CLI). Pinned to the IMMUTABLE pushed M8 anchor (the
-    # feat/m8-governed-agent-loop head that ships the A8 [agent]-block
-    # validator + the agent-pack hosting arms this pack authors against);
-    # mirrors the sibling cognic-skill-cards-data dev-extra shape. Dev
-    # extra ONLY — the wheel's runtime dependencies stay empty by design.
-    "cognic-agentos @ git+https://github.com/bmzee/cognic-agentos@b910108",
+    # CLI). Pinned to the full immutable, reviewed M8.5-E BAR-I composition
+    # revision used by the release proof. Dev extra ONLY — the wheel's
+    # runtime dependencies stay empty by design.
+    "cognic-agentos @ git+https://github.com/bmzee/cognic-agentos@1402e7dc67cf4532df748a99a4d7f472e430e644",
 ]
 
 # The ONLY entry point: the inert cognic.agents marker. The plugin
